@@ -1,0 +1,30 @@
+{
+  "name": "atmosphere-javascript-mock",
+  "version": "1.0.0",
+  "description": "Mock atmosphere requests to aid client-side development",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jfmbrennan/atmosphere-javascript-mock.git"
+  },
+  "keywords": [
+    "atmosphere",
+    "javascript"
+  ],
+  "author": "John Brennan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jfmbrennan/atmosphere-javascript-mock/issues"
+  },
+  "homepage": "https://github.com/jfmbrennan/atmosphere-javascript-mock#readme",
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "debug": "^2.2.0",
+    "express": "^4.13.4",
+    "lodash": "^4.13.1",
+    "node-uuid": "^1.4.7"
+  }
+}

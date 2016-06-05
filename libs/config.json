@@ -1,0 +1,11 @@
+{
+  "port": 8888,
+  "url": "/broadcast",
+  "logLevel": "off",
+  "transport": "long-polling",
+  "enableXDR": true,
+  "trackMessageLength": true,
+  "pollTimeout": 60000,
+  "attachHeadersAsQueryString": [],
+  "dropHeaders": []
+}
