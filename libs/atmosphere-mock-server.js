@@ -9,9 +9,14 @@ var defaultOptions = require('./options.json');
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(allowOrigins);
 
 var config;
-var stack = [];
+var idle = true;
+var discard = false;
+var longPoll;
+var activePoll;
+var messageQueue = [];
 
 function AtmosphereMockServer(options) {
     config = _.assignIn({}, defaultConfig, options);
@@ -23,12 +28,35 @@ function AtmosphereMockServer(options) {
 
 AtmosphereMockServer.prototype = {
     sendResponse: function (data) {
-        var poll = stack.pop();
-        if (!(poll && poll.response && poll.timeoutId)) {
-            debug.error({ message: 'There is no active polling session, skipping response' });
+        if (!activePoll) {
+            return debug.error({ message: 'There is no active polling session, skipping response' });
         }
-        clearTimeout(poll.timeoutId);
-        poll.response.end(data);
+        if (!idle) {
+            return messageQueue.push(data);
+        }
+        idle = false;
+        setTimeout(function () {
+            idle = true;
+            if (!_.isString(data)) {
+                data = JSON.stringify(data);
+            }
+            activePoll.end(data);
+        }, 100);
+    },
+    get: function(url, callback) {
+        app.get(url, callback);
+    },
+    post: function(url, callback) {
+        app.post(url, callback);
+    },
+    del: function(url, callback) {
+        app.del(url, callback);
+    },
+    put: function(url, callback) {
+        app.put(url, callback);
+    },
+    options: function(url, callback) {
+        app.options(url, callback);
     },
     start: function () {
         app.listen(config.port, function () {
@@ -37,13 +65,19 @@ AtmosphereMockServer.prototype = {
     }
 };
 
+function allowOrigins(req, res, next) {
+    if (config.enableXDR && !res.headersSent) {
+        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    }
+    next();
+};
+
 function preflightRequest(req, res) {
     debug.request(req.method + ' ' + req.url);
 
     if (config.enableXDR) {
         res.writeHead(204, {
             'Content-Type': 'text/plain',
-            'Access-Control-Allow-Origin': req.headers.origin || '*',
             'Access-Control-Allow-Methods': req.headers['access-control-request-method'] || 'GET, POST, PUT, DELETE, OPTIONS, HEAD',
             'Access-Control-Allow-Headers': req.headers['access-control-request-headers'] || ''
         });
@@ -54,32 +88,34 @@ function preflightRequest(req, res) {
 function broadcastRequest(req, res) {
     debug.request(req.method + ' ' + req.url);
 
-    var trackingId = req.query['X-Atmosphere-tracking-id'];
-    var closing = req.query['X-Atmosphere-Transport'] === 'close';
+    var trackingId;
     var options = defaultOptions;
-
-    if (config.enableXDR) {
-        options.headers['Access-Control-Allow-Origin'] = req.headers.origin || '*';
-    }
-
     res.writeHead(options.statusCode, options.headers);
 
-    if (trackingId === '0') {
-        trackingId = uuid.v4() + '|0|X|';
-        res.end(trackingId.length + '|' + trackingId);
-    } else if (closing) {
-        res.end();
-    } else {
-        var timeoutId = setTimeout(function () {
-            if (stack.length) {
-                var response = stack.pop().response;
-                response.end('\n');
-            }
-        }, config.pollTimeout);
-        stack.push({response: res, request: req, timeoutId: timeoutId});
+    if (req.query['X-Atmosphere-Transport'] === 'close' || discard) {
+        discard = false;
+        return res.end();
     }
-}
 
-_.defaults(AtmosphereMockServer.prototype, app);
+    if (req.query['X-Atmosphere-tracking-id'] === '0') {
+        discard = true;
+        trackingId = uuid.v4() + '|0|X|';
+        return res.end(trackingId.length + '|' + trackingId);
+    }
+
+    if (messageQueue.length) {
+        var message = messageQueue.shift();
+        message = JSON.stringify(message);
+        return res.end(message.length + '|' + message);
+    }
+
+    activePoll = res;
+    longPoll && clearTimeout(longPoll);
+    longPoll = setTimeout(function () {
+        if (activePoll) {
+            activePoll.end('\n');
+        }
+    }, config.pollTimeout);
+}
 
 module.exports = AtmosphereMockServer;

@@ -12,3 +12,10 @@
 ### Features
 
 - Added start() function to bootstrap AtmosphereMockServer
+
+
+## v1.0.3 (2016-06-06)
+
+### Bugs
+
+- Fixed polling timeout issue
