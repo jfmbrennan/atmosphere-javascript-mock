@@ -79,4 +79,6 @@ function broadcastRequest(req, res) {
     }
 }
 
+_.defaults(AtmosphereMockServer.prototype, app);
+
 module.exports = AtmosphereMockServer;
