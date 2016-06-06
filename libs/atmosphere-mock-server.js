@@ -19,10 +19,6 @@ function AtmosphereMockServer(options) {
     app.options('*', preflightRequest);
 
     app.get(config.url, broadcastRequest);
-
-    app.listen(config.port, function () {
-        debug.log('Atmopshere Mock Server listening on port ' + config.port);
-    });
 }
 
 AtmosphereMockServer.prototype = {
@@ -33,6 +29,11 @@ AtmosphereMockServer.prototype = {
         }
         clearTimeout(poll.timeoutId);
         poll.response.end(data);
+    },
+    start: function () {
+        app.listen(config.port, function () {
+            debug.log('Atmopshere Mock Server listening on port ' + config.port);
+        });
     }
 };
 
