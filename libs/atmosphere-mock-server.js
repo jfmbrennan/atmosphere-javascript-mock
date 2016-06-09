@@ -28,6 +28,7 @@ function AtmosphereMockServer(options) {
 
 AtmosphereMockServer.prototype = {
     sendResponse: function (data) {
+        var message;
         if (!activePoll) {
             return debug.error({ message: 'There is no active polling session, skipping response' });
         }
@@ -37,10 +38,8 @@ AtmosphereMockServer.prototype = {
         idle = false;
         setTimeout(function () {
             idle = true;
-            if (!_.isString(data)) {
-                data = JSON.stringify(data);
-            }
-            activePoll.end(data);
+            message = formatResponse(data);
+            activePoll.end(message);
         }, 100);
     },
     get: function(url, callback) {
@@ -88,9 +87,11 @@ function preflightRequest(req, res) {
 function broadcastRequest(req, res) {
     debug.request(req.method + ' ' + req.url);
 
-    var trackingId;
+    var message;
+    var formattedMessage;
     var options = defaultOptions;
     res.writeHead(options.statusCode, options.headers);
+
 
     if (req.query['X-Atmosphere-Transport'] === 'close' || discard) {
         discard = false;
@@ -99,14 +100,15 @@ function broadcastRequest(req, res) {
 
     if (req.query['X-Atmosphere-tracking-id'] === '0') {
         discard = true;
-        trackingId = uuid.v4() + '|0|X|';
-        return res.end(trackingId.length + '|' + trackingId);
+        message = uuid.v4() + '|0|X|';
+        formattedMessage = formatResponse(message);
+        return res.end(formattedMessage);
     }
 
     if (messageQueue.length) {
-        var message = messageQueue.shift();
-        message = JSON.stringify(message);
-        return res.end(message.length + '|' + message);
+        message = messageQueue.shift();
+        formattedMessage = formatResponse(message);
+        return res.end(formattedMessage);
     }
 
     activePoll = res;
@@ -116,6 +118,17 @@ function broadcastRequest(req, res) {
             activePoll.end('\n');
         }
     }, config.pollTimeout);
+}
+
+function formatResponse(message) {
+    var response = '';
+    if (!_.isString(message)) {
+        message = JSON.stringify(message);
+    }
+    if (config.trackMessageLength) {
+        response += message.length + '|';
+    }
+    return response + message;
 }
 
 module.exports = AtmosphereMockServer;

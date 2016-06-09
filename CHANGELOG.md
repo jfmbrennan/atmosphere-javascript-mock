@@ -19,3 +19,10 @@
 ### Bugs
 
 - Fixed polling timeout issue
+
+
+## v1.0.4 (2016-06-09)
+
+### Features
+
+- Added support for trackMessageLength feature
