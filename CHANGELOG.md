@@ -26,3 +26,10 @@
 ### Features
 
 - Added support for trackMessageLength feature
+
+
+## v1.0.5 (2016-06-14)
+
+### Features
+
+- Added optional delay parameter to sendResponse method
