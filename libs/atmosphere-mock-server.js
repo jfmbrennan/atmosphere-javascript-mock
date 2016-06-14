@@ -27,7 +27,8 @@ function AtmosphereMockServer(options) {
 }
 
 AtmosphereMockServer.prototype = {
-    sendResponse: function (data) {
+    sendResponse: function (data, delay) {
+        delay = delay || 100;
         var message;
         if (!activePoll) {
             return debug.error({ message: 'There is no active polling session, skipping response' });
@@ -40,7 +41,7 @@ AtmosphereMockServer.prototype = {
             idle = true;
             message = formatResponse(data);
             activePoll.end(message);
-        }, 100);
+        }, delay);
     },
     get: function(url, callback) {
         app.get(url, callback);
