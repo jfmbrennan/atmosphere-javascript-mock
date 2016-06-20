@@ -33,3 +33,10 @@
 ### Features
 
 - Added optional delay parameter to sendResponse method
+
+
+## v1.0.6 (2016-06-40)
+
+### Bugs
+
+- Fixed "express deprecated app.del: Use app.delete instead" warning message

@@ -49,8 +49,8 @@ AtmosphereMockServer.prototype = {
     post: function(url, callback) {
         app.post(url, callback);
     },
-    del: function(url, callback) {
-        app.del(url, callback);
+    delete: function(url, callback) {
+        app.delete(url, callback);
     },
     put: function(url, callback) {
         app.put(url, callback);
