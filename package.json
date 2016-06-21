@@ -1,6 +1,6 @@
 {
   "name": "atmosphere-javascript-mock",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Mock atmosphere requests to aid client-side development",
   "main": "index.js",
   "scripts": {
