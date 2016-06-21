@@ -10,6 +10,7 @@ var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(allowOrigins);
+app.use(logRouteDetails);
 
 var config;
 var idle = true;
@@ -70,11 +71,9 @@ function allowOrigins(req, res, next) {
         res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     }
     next();
-};
+}
 
 function preflightRequest(req, res) {
-    debug.request(req.method + ' ' + req.url);
-
     if (config.enableXDR) {
         res.writeHead(204, {
             'Content-Type': 'text/plain',
@@ -86,13 +85,10 @@ function preflightRequest(req, res) {
 }
 
 function broadcastRequest(req, res) {
-    debug.request(req.method + ' ' + req.url);
-
     var message;
     var formattedMessage;
     var options = defaultOptions;
     res.writeHead(options.statusCode, options.headers);
-
 
     if (req.query['X-Atmosphere-Transport'] === 'close' || discard) {
         discard = false;
@@ -129,7 +125,28 @@ function formatResponse(message) {
     if (config.trackMessageLength) {
         response += message.length + '|';
     }
+    debug.response(response + message);
     return response + message;
+}
+
+function logRouteDetails(req, res, next) {
+    var message = 'Request details ->';
+    message += '\n\tMethod: ' + req.method;
+    message += '\n\tURL: ' + req.url;
+    if (!_.isEmpty(req.params)) {
+        message += '\n\tPath parameters ->';
+        _.forEach(req.params, function (value, key) {
+            message += '\n\t\t' + key + ': '+ value;
+        });
+    }
+    if (!_.isEmpty(req.query)) {
+        message += '\n\tQuery parameters ->';
+        _.forEach(req.query, function (value, key) {
+            message += '\n\t\t' + key + ': '+ value;
+        });
+    }
+    debug.request(message);
+    next();
 }
 
 module.exports = AtmosphereMockServer;
