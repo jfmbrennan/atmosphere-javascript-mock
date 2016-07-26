@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.8 (2016-07-26)
+### Bugs
+- Fixed issue where responses were being dropped if sendResponse is called multiple times simultaneously
+
 ## v1.0.7 (2016-06-21)
 ### Bugs
 ### Features

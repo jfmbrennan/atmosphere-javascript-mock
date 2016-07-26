@@ -28,21 +28,13 @@ function AtmosphereMockServer(options) {
 }
 
 AtmosphereMockServer.prototype = {
-    sendResponse: function (data, delay) {
-        delay = delay || 100;
+    sendResponse: function (data) {
         var message;
         if (!activePoll) {
             return debug.error({ message: 'There is no active polling session, skipping response' });
         }
-        if (!idle) {
-            return messageQueue.push(data);
-        }
-        idle = false;
-        setTimeout(function () {
-            idle = true;
-            message = formatResponse(data);
-            activePoll.end(message);
-        }, delay);
+        messageQueue.push(data);
+        activePoll.end();
     },
     get: function(url, callback) {
         app.get(url, callback);
