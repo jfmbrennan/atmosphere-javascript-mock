@@ -8,10 +8,8 @@
   "pollTimeout": 60000,
   "attachHeadersAsQueryString": [],
   "dropHeaders": [],
-  "ssl": {
-    "enabled": false,
-    "port": 8443,
-    "key": "ssl/key.pem",
-    "cert": "ssl/cert.pem"
-  }
+  "ssl": false,
+  "sslPort": 8443,
+  "sslKey": "ssl/key.pem",
+  "sslCert": "ssl/cert.pem"
 }
