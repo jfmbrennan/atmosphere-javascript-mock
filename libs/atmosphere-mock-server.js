@@ -56,13 +56,13 @@ AtmosphereMockServer.prototype = {
         http.createServer(app).listen(config.port, function () {
             debug.log('Atmopshere Mock Server listening on port ' + config.port);
         });
-        if (config.ssl.enabled) {
+        if (config.ssl) {
             var options = {
-                key: fs.readFileSync(config.ssl.key),
-                cert: fs.readFileSync(config.ssl.cert)
+                key: fs.readFileSync(config.sslKey),
+                cert: fs.readFileSync(config.sslCert)
             };
-            https.createServer(options, app).listen(config.ssl.port, function () {
-                debug.log('Secure Atmosphere Mock Server listening on port ' + config.ssl.port);
+            https.createServer(options, app).listen(config.sslPort, function () {
+                debug.log('Secure Atmosphere Mock Server listening on port ' + config.sslPort);
             });
         }
     }
