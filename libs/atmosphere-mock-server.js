@@ -1,5 +1,8 @@
 var _ = require('lodash');
 var express = require('express');
+var https = require('https');
+var http = require('http');
+var fs = require('fs');
 var bodyParser = require('body-parser');
 var uuid = require('node-uuid');
 var debug = require('./debug.js');
@@ -13,7 +16,6 @@ app.use(allowOrigins);
 app.use(logRouteDetails);
 
 var config;
-var idle = true;
 var discard = false;
 var longPoll;
 var activePoll;
@@ -29,32 +31,40 @@ function AtmosphereMockServer(options) {
 
 AtmosphereMockServer.prototype = {
     sendResponse: function (data) {
-        var message;
         if (!activePoll) {
-            return debug.error({ message: 'There is no active polling session, skipping response' });
+            return debug.error({message: 'There is no active polling session, skipping response'});
         }
         messageQueue.push(data);
         activePoll.end();
     },
-    get: function(url, callback) {
+    get: function (url, callback) {
         app.get(url, callback);
     },
-    post: function(url, callback) {
+    post: function (url, callback) {
         app.post(url, callback);
     },
-    delete: function(url, callback) {
+    delete: function (url, callback) {
         app.delete(url, callback);
     },
-    put: function(url, callback) {
+    put: function (url, callback) {
         app.put(url, callback);
     },
-    options: function(url, callback) {
+    options: function (url, callback) {
         app.options(url, callback);
     },
     start: function () {
-        app.listen(config.port, function () {
+        http.createServer(app).listen(config.port, function () {
             debug.log('Atmopshere Mock Server listening on port ' + config.port);
         });
+        if (config.ssl.enabled) {
+            var options = {
+                key: fs.readFileSync(config.ssl.key),
+                cert: fs.readFileSync(config.ssl.cert)
+            };
+            https.createServer(options, app).listen(config.ssl.port, function () {
+                debug.log('Secure Atmosphere Mock Server listening on port ' + config.ssl.port);
+            });
+        }
     }
 };
 
@@ -128,13 +138,13 @@ function logRouteDetails(req, res, next) {
     if (!_.isEmpty(req.params)) {
         message += '\n\tPath parameters ->';
         _.forEach(req.params, function (value, key) {
-            message += '\n\t\t' + key + ': '+ value;
+            message += '\n\t\t' + key + ': ' + value;
         });
     }
     if (!_.isEmpty(req.query)) {
         message += '\n\tQuery parameters ->';
         _.forEach(req.query, function (value, key) {
-            message += '\n\t\t' + key + ': '+ value;
+            message += '\n\t\t' + key + ': ' + value;
         });
     }
     debug.request(message);
