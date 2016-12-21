@@ -10,6 +10,8 @@ var defaultConfig = require('./config.json');
 var defaultOptions = require('./options.json');
 
 var app = express();
+var expressWs = require('express-ws')(app);
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(allowOrigins);
@@ -26,16 +28,32 @@ function AtmosphereMockServer(options) {
 
     app.options('*', preflightRequest);
 
-    app.get(config.url, broadcastRequest);
+    if (config.transport === 'websocket') {
+        config.url += '*';
+        app.ws(config.url, broadcastWebsocketRequest);
+    } else {
+        app.get(config.url, broadcastLongPollRequest);
+    }
 }
 
 AtmosphereMockServer.prototype = {
     sendResponse: function (data) {
-        if (!activePoll) {
-            return debug.error({message: 'There is no active polling session, skipping response'});
+        if (config.transport === 'websocket') {
+            var broadcastWs = expressWs.getWss(config.url);
+            _.forEach(broadcastWs.clients, function (client) {
+                var formattedMessage = formatResponse(data);
+                client.send(formattedMessage);
+            });
+        } else {
+            if (!activePoll) {
+                return debug.error({message: 'There is no active polling session, skipping response'});
+            }
+            messageQueue.push(data);
+            activePoll.end();
         }
-        messageQueue.push(data);
-        activePoll.end();
+    },
+    all: function (url, callback) {
+        app.all(url, callback);
     },
     get: function (url, callback) {
         app.get(url, callback);
@@ -53,8 +71,8 @@ AtmosphereMockServer.prototype = {
         app.options(url, callback);
     },
     start: function () {
-        http.createServer(app).listen(config.port, function () {
-            debug.log('Atmopshere Mock Server listening on port ' + config.port);
+        app.listen(config.port, config.host, function () {
+            debug.log('Atmosphere Mock Server listening on port ' + config.port);
         });
         if (config.ssl) {
             var options = {
@@ -86,7 +104,7 @@ function preflightRequest(req, res) {
     res.end();
 }
 
-function broadcastRequest(req, res) {
+function broadcastLongPollRequest(req, res) {
     var message;
     var formattedMessage;
     var options = defaultOptions;
@@ -117,6 +135,14 @@ function broadcastRequest(req, res) {
             activePoll.end('\n');
         }
     }, config.pollTimeout);
+}
+
+function broadcastWebsocketRequest(ws, req) {
+    if (req.query['X-Atmosphere-tracking-id'] === '0') {
+        var message = uuid.v4() + '|0|X|';
+        var formattedMessage = formatResponse(message);
+        ws.send(formattedMessage);
+    }
 }
 
 function formatResponse(message) {
