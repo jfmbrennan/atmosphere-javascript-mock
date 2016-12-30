@@ -23,12 +23,16 @@ var longPoll;
 var activePoll;
 var messageQueue = [];
 
+var heartbeat;
+var websocketKeyMap = {};
+
 function AtmosphereMockServer(options) {
     config = _.assignIn({}, defaultConfig, options);
 
     app.options('*', preflightRequest);
 
     if (config.transport === 'websocket') {
+        app.get(config.url, broadcastNonWebsocketRequest);
         config.url += '*';
         app.ws(config.url, broadcastWebsocketRequest);
     } else {
@@ -40,9 +44,12 @@ AtmosphereMockServer.prototype = {
     sendResponse: function (data) {
         if (config.transport === 'websocket') {
             var broadcastWs = expressWs.getWss(config.url);
+            var websocketKey = websocketKeyMap[data.clientSessionId];
             _.forEach(broadcastWs.clients, function (client) {
-                var formattedMessage = formatResponse(data);
-                client.send(formattedMessage);
+                if (websocketKey === client.upgradeReq.headers['sec-websocket-key']) {
+                    var formattedMessage = formatResponse(data);
+                    client.send(formattedMessage);
+                }
             });
         } else {
             if (!activePoll) {
@@ -69,6 +76,9 @@ AtmosphereMockServer.prototype = {
     },
     options: function (url, callback) {
         app.options(url, callback);
+    },
+    param: function (url, callback) {
+        app.param(url, callback);
     },
     start: function () {
         app.listen(config.port, config.host, function () {
@@ -139,9 +149,22 @@ function broadcastLongPollRequest(req, res) {
 
 function broadcastWebsocketRequest(ws, req) {
     if (req.query['X-Atmosphere-tracking-id'] === '0') {
-        var message = uuid.v4() + '|0|X|';
+        var sessionId = uuid.v4();
+        var message = sessionId + '|0|X|';
         var formattedMessage = formatResponse(message);
+
+        websocketKeyMap[sessionId] = req.headers['sec-websocket-key'];
         ws.send(formattedMessage);
+
+        heartbeat = setInterval(function () {
+            ws.send('1|X');
+        }, config.pollTimeout);
+    }
+}
+
+function broadcastNonWebsocketRequest(req, res) {
+    if (req.query['X-Atmosphere-Transport'] === 'close') {
+        clearInterval(heartbeat);
     }
 }
 
