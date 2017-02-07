@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.2.0 (2017-02-07)
+### Features
+- Added websocket support for mock server
+- Added heartbeat to websocket connection
+- Added support for multiple websocket connections
+
+## v1.1.0 (2016-09-15)
+### Features
+- Updated HTTPS support for atmosphere-javascript-mock
+
 ## v1.0.9 (2016-09-15)
 ### Features
 - Added support for HTTPS
