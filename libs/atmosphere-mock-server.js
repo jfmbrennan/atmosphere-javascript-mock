@@ -33,7 +33,6 @@ function AtmosphereMockServer(options) {
   app.get(config.url, broadcastRequest);
 
   if (config.transport === 'websocket') {
-    config.url += '*';
     app.ws(config.url, broadcastWebsocketRequest);
   }
 }
@@ -42,13 +41,17 @@ AtmosphereMockServer.prototype = {
   sendResponse: function (data) {
     if (config.transport === 'websocket') {
       var broadcastWs = expressWs.getWss(config.url);
-      var websocketKey = websocketKeyMap[data.clientSessionId].key;
-      _.forEach(broadcastWs.clients, function (client) {
-        if (websocketKey === client.upgradeReq.headers['sec-websocket-key']) {
-          var formattedMessage = formatResponse(data);
-          client.send(formattedMessage);
-        }
-      });
+      var websocketData = websocketKeyMap[data.clientSessionId];
+      if (websocketData && websocketData.key) {
+        _.forEach(broadcastWs.clients, function (client) {
+          if (websocketData.key === client.upgradeReq.headers['sec-websocket-key']) {
+            var formattedMessage = formatResponse(data);
+            client.send(formattedMessage);
+          }
+        });
+      } else {
+        return debug.error({message: 'There is no active websocket connection, skipping response'});
+      }
     } else {
       if (!activePoll) {
         return debug.error({message: 'There is no active polling session, skipping response'});
@@ -109,7 +112,7 @@ function preflightRequest(req, res) {
       'Access-Control-Allow-Headers': req.headers['access-control-request-headers'] || ''
     });
   }
-  res.end();
+  return res.end();
 }
 
 function broadcastRequest(req, res) {
@@ -127,7 +130,7 @@ function broadcastLongPollRequest(req, res) {
 
   if (config.transport !== 'long-polling') {
     config.transport = 'long-polling';
-    console.log('setting config.transport: ' + config.transport);
+    debug.log('setting config.transport: ' + config.transport);
   }
 
   if (req.query['X-Atmosphere-Transport'] === 'close' || discard) {
@@ -161,15 +164,16 @@ function broadcastLongPollRequest(req, res) {
 function broadcastWebsocketRequest(ws, req) {
   if (req.query['X-Atmosphere-tracking-id'] === '0') {
     var sessionId = uuid.v4();
-    var messageParts = [sessionId, config.heartbeatInterval, config.heartbeatPadding];
+    var messageParts = [sessionId, config.clientHeartbeatInterval, config.heartbeatPadding];
     var formattedMessage = formatResponse(messageParts.join(config.messageDelimiter));
+
     ws.send(formattedMessage);
 
     websocketKeyMap[sessionId] = {
       key: req.headers['sec-websocket-key'],
       intervalId: setInterval(function () {
         ws.send(formatResponse(config.heartbeatPadding));
-      }, config.heartbeatInterval)
+      }, config.serverHeartbeatInterval)
     };
   }
 }
@@ -177,8 +181,12 @@ function broadcastWebsocketRequest(ws, req) {
 function broadcastNonWebsocketRequest(req, res) {
   if (req.query['X-Atmosphere-Transport'] === 'close') {
     var sessionId = req.query['X-Atmosphere-tracking-id'];
-    clearInterval(websocketKeyMap[sessionId].intervalId);
-    _.unset(websocketKeyMap, sessionId);
+    if (websocketKeyMap[sessionId]) {
+      clearInterval(websocketKeyMap[sessionId].intervalId);
+      _.unset(websocketKeyMap, sessionId);
+    } else {
+      debug.error({message: 'Could not find websocket connection to remove'});
+    }
   }
   return res.end();
 }
