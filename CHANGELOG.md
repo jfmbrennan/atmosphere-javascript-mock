@@ -1,9 +1,13 @@
 # Changelog
 
+## v1.2.2 (2017-02-15)
+### Features
+- Added support for hosting static files
+
 ## v1.2.1 (2017-02-09)
 ### Features
 - Added robustness for websockets for mock server
-- 
+
 ## v1.2.0 (2017-02-07)
 ### Features
 - Added websocket support for mock server
