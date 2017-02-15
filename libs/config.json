@@ -15,5 +15,6 @@
   "ssl": false,
   "sslPort": 8443,
   "sslKey": "ssl/key.pem",
-  "sslCert": "ssl/cert.pem"
+  "sslCert": "ssl/cert.pem",
+  "staticDir": ""
 }
