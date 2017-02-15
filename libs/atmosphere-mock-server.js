@@ -35,6 +35,10 @@ function AtmosphereMockServer(options) {
   if (config.transport === 'websocket') {
     app.ws(config.url, broadcastWebsocketRequest);
   }
+
+  if (!!config.staticDir) {
+    app.use(express.static(config.staticDir));
+  }
 }
 
 AtmosphereMockServer.prototype = {
