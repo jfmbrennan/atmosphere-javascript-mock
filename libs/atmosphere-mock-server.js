@@ -10,13 +10,13 @@ var defaultConfig = require('./config.json');
 var defaultOptions = require('./options.json');
 
 var app = express();
-var expressWs = require('express-ws')(app);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(allowOrigins);
 app.use(logRouteDetails);
 
+var expressWs;
 var config;
 var discard = false;
 var longPoll;
@@ -32,7 +32,16 @@ function AtmosphereMockServer(options) {
 
   app.get(config.url, broadcastRequest);
 
+  var options = {
+    key: fs.readFileSync(config.sslKey),
+    cert: fs.readFileSync(config.sslCert)
+  };
+  var httpsServer = https.createServer(options, app).listen(config.port, function () {
+    debug.log('Secure Atmosphere Mock Server listening on port ' + config.port);
+  });
+
   if (config.transport === 'websocket') {
+    expressWs = require('express-ws')(app, httpsServer);
     app.ws(config.url, broadcastWebsocketRequest);
   }
 
@@ -84,20 +93,6 @@ AtmosphereMockServer.prototype = {
   },
   param: function (url, callback) {
     app.param(url, callback);
-  },
-  start: function () {
-    app.listen(config.port, config.host, function () {
-      debug.log('Atmosphere Mock Server listening on port ' + config.port);
-    });
-    if (config.ssl) {
-      var options = {
-        key: fs.readFileSync(config.sslKey),
-        cert: fs.readFileSync(config.sslCert)
-      };
-      https.createServer(options, app).listen(config.sslPort, function () {
-        debug.log('Secure Atmosphere Mock Server listening on port ' + config.sslPort);
-      });
-    }
   }
 };
 
