@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.3 (2017-04-21)
+### Features
+- Enforcing https and wss (dropped support for http and ws)
+
 ## v1.2.2 (2017-02-15)
 ### Features
 - Added support for hosting static files
