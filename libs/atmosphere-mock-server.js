@@ -5,6 +5,7 @@ var http = require('http');
 var fs = require('fs');
 var bodyParser = require('body-parser');
 var uuid = require('node-uuid');
+var ip = require('ip');
 var debug = require('./debug.js');
 var defaultConfig = require('./config.json');
 var defaultOptions = require('./options.json');
@@ -37,7 +38,7 @@ function AtmosphereMockServer(options) {
     cert: fs.readFileSync(config.sslCert)
   };
   var httpsServer = https.createServer(options, app).listen(config.port, function () {
-    debug.log('Secure Atmosphere Mock Server listening on port ' + config.port);
+    console.log('Server started on', ip.address() + ':' + config.port);
   });
 
   if (config.transport === 'websocket') {
