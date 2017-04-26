@@ -38,7 +38,7 @@ function AtmosphereMockServer(options) {
     cert: fs.readFileSync(config.sslCert)
   };
   var httpsServer = https.createServer(options, app).listen(config.port, function () {
-    console.log('Server started on', ip.address() + ':' + config.port);
+    console.log('Server started on', 'https://' + ip.address() + ':' + config.port);
   });
 
   if (config.transport === 'websocket') {
