@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.4 (2017-04-26)
+### Features
+- Added logging of IP address to console message
+
 ## v1.2.3 (2017-04-21)
 ### Features
 - Enforcing https and wss (dropped support for http and ws)
