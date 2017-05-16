@@ -171,9 +171,15 @@ function broadcastWebsocketRequest(ws, req) {
 
     websocketKeyMap[sessionId] = {
       key: req.headers['sec-websocket-key'],
-      intervalId: setInterval(function () {
-        ws.send(formatResponse(config.heartbeatPadding));
-      }, config.serverHeartbeatInterval)
+      intervalId: setInterval(_.bind(function () {
+        try {
+          ws.send(formatResponse(config.heartbeatPadding));
+        } catch (error) {
+          clearInterval(websocketKeyMap[this].intervalId);
+          _.unset(websocketKeyMap, this);
+          debug.log('Clearing websocket heartbeat interval for session id: ' + this);
+        }
+      }, sessionId), config.serverHeartbeatInterval)
     };
   }
 }

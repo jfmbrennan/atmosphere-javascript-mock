@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.5 (2017-05-16)
+### Bugs
+- Fixed issue with client websocket connection disconnecting unexpectedly
+
 ## v1.2.4 (2017-04-26)
 ### Features
 - Added logging of IP address to console message
