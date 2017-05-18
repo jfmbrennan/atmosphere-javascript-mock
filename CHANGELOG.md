@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.6 (2017-05-18)
+### Features
+- Added file uploader to mock server
+
 ## v1.2.5 (2017-05-16)
 ### Bugs
 - Fixed issue with client websocket connection disconnecting unexpectedly
