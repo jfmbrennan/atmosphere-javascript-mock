@@ -6,12 +6,14 @@ var fs = require('fs');
 var bodyParser = require('body-parser');
 var uuid = require('node-uuid');
 var ip = require('ip');
+var fileUpload = require('express-fileupload');
 var debug = require('./debug.js');
 var defaultConfig = require('./config.json');
 var defaultOptions = require('./options.json');
 
 var app = express();
 
+app.use(fileUpload());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(allowOrigins);
@@ -47,6 +49,9 @@ function AtmosphereMockServer(options) {
   }
 
   if (!!config.staticDir) {
+    if (!fs.existsSync(config.staticDir + config.uploadDir)){
+      fs.mkdirSync(config.staticDir + config.uploadDir);
+    }
     app.use(express.static(config.staticDir));
   }
 }

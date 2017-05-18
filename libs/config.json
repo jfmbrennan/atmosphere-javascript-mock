@@ -16,5 +16,6 @@
   "sslPort": 8443,
   "sslKey": "ssl/key.pem",
   "sslCert": "ssl/cert.pem",
-  "staticDir": ""
+  "staticDir": "",
+  "uploadDir": "uploads/"
 }
