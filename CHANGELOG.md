@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.7 (2017-05-26)
+### Features
+- Added support for template engine
+
 ## v1.2.6 (2017-05-18)
 ### Features
 - Added file uploader to mock server
