@@ -48,11 +48,15 @@ function AtmosphereMockServer(options) {
     app.ws(config.url, broadcastWebsocketRequest);
   }
 
+  if (!!config.templateEngine) {
+    app.set('view engine', 'pug');
+  }
+
   if (!!config.staticDir) {
     if (!fs.existsSync(config.staticDir + config.uploadDir)){
       fs.mkdirSync(config.staticDir + config.uploadDir);
     }
-    app.use(express.static(config.staticDir));
+    app.use(express.static(config.staticDir, config.staticOptions));
   }
 }
 
