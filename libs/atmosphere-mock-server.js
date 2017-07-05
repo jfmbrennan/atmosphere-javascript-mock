@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 var uuid = require('node-uuid');
 var ip = require('ip');
 var fileUpload = require('express-fileupload');
+var path = require('path');
 var debug = require('./debug.js');
 var defaultConfig = require('./config.json');
 var defaultOptions = require('./options.json');
@@ -50,6 +51,10 @@ function AtmosphereMockServer(options) {
 
   if (!!config.templateEngine) {
     app.set('view engine', 'pug');
+  }
+
+  if (!!config.viewsPath) {
+    app.set('views', path.join(__dirname, config.viewsPath));
   }
 
   if (!!config.staticDir) {
@@ -103,6 +108,9 @@ AtmosphereMockServer.prototype = {
   },
   param: function (url, callback) {
     app.param(url, callback);
+  },
+  ws: function (url, callback) {
+    app.ws(url, callback);
   }
 };
 
