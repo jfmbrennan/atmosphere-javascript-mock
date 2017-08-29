@@ -17,6 +17,7 @@
   "sslKey": "ssl/key.pem",
   "sslCert": "ssl/cert.pem",
   "staticDir": "",
-  "staticOptions": {},
-  "uploadDir": "uploads/"
+  "staticOptions": { },
+  "uploadDir": "uploads/",
+  "libraryDir": "sample-library/"
 }

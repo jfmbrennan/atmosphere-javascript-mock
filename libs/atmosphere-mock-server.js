@@ -58,6 +58,10 @@ function AtmosphereMockServer(options) {
     }
     app.use(express.static(config.staticDir, config.staticOptions));
   }
+
+  if (config.libraryDir) {
+    app.use(express.static(config.staticDir + '/' + config.libraryDir, config.staticOptions));
+  }
 }
 
 AtmosphereMockServer.prototype = {
