@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.8 (2017-08-29)
+### Features
+- Added support for additional static dir
+
 ## v1.2.7 (2017-05-26)
 ### Features
 - Added support for template engine
